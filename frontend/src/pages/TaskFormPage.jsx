@@ -1,5 +1,16 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { motion } from "framer-motion";
+import {
+  FileText,
+  AlignLeft,
+  Tag,
+  ArrowLeft,
+  Save,
+  Circle,
+  Clock,
+  CheckCircle,
+} from "lucide-react";
 import { useTasks } from "../context/TaskContext";
 import MainLayout from "../layouts/MainLayout";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -9,10 +20,27 @@ import toast from "react-hot-toast";
 
 const INITIAL_FORM = { title: "", description: "", status: "pendiente" };
 
-/**
- * Reusable form for both creating and editing tasks.
- * Edit mode is detected by the presence of :id in the URL.
- */
+const STATUS_ICONS = {
+  pendiente: {
+    icon: Circle,
+    color: "#F59E0B",
+    bg: "rgba(245,158,11,0.12)",
+    border: "rgba(245,158,11,0.3)",
+  },
+  "en progreso": {
+    icon: Clock,
+    color: "#818cf8",
+    bg: "rgba(99,102,241,0.12)",
+    border: "rgba(99,102,241,0.3)",
+  },
+  completada: {
+    icon: CheckCircle,
+    color: "#4ade80",
+    bg: "rgba(34,197,94,0.1)",
+    border: "rgba(34,197,94,0.25)",
+  },
+};
+
 export default function TaskFormPage() {
   const { id } = useParams();
   const isEdit = Boolean(id);
@@ -23,7 +51,6 @@ export default function TaskFormPage() {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(isEdit);
 
-  // Load existing task data in edit mode
   useEffect(() => {
     if (!isEdit) return;
     taskService
@@ -73,19 +100,55 @@ export default function TaskFormPage() {
     );
   }
 
+  const statusConf = STATUS_ICONS[form.status];
+  const StatusIcon = statusConf?.icon ?? Circle;
+
   return (
     <MainLayout>
-      <div className="max-w-lg mx-auto">
-        <h1 className="text-2xl font-bold text-slate-100 mb-6">
-          {isEdit ? "Editar tarea" : "Nueva tarea"}
-        </h1>
+      <motion.div
+        className="max-w-xl mx-auto"
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35 }}
+      >
+        {/* Back button */}
+        <button
+          onClick={() => navigate("/tasks")}
+          className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-300 mb-6 transition-colors"
+        >
+          <ArrowLeft size={15} />
+          Volver al tablero
+        </button>
 
-        <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6">
+        <div className="glass-card p-7">
+          <div className="flex items-center gap-3 mb-7">
+            <div
+              className="w-9 h-9 rounded-xl flex items-center justify-center"
+              style={{ background: "rgba(245,158,11,0.12)" }}
+            >
+              <FileText size={17} style={{ color: "#F59E0B" }} />
+            </div>
+            <div>
+              <h1 className="text-base font-bold text-slate-100">
+                {isEdit ? "Editar tarea" : "Nueva tarea"}
+              </h1>
+              <p className="text-xs text-slate-500">
+                {isEdit
+                  ? "Modifica los campos necesarios"
+                  : "Completa los campos para crear"}
+              </p>
+            </div>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Title */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">
-                Título <span className="text-red-400">*</span>
+              <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wider">
+                <FileText size={12} />
+                Título{" "}
+                <span className="text-red-400 normal-case tracking-normal">
+                  *
+                </span>
               </label>
               <input
                 type="text"
@@ -94,13 +157,14 @@ export default function TaskFormPage() {
                 onChange={handleChange}
                 required
                 placeholder="¿Qué necesitas hacer?"
-                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                className="input-glass"
               />
             </div>
 
             {/* Description */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">
+              <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wider">
+                <AlignLeft size={12} />
                 Descripción
               </label>
               <textarea
@@ -109,31 +173,49 @@ export default function TaskFormPage() {
                 onChange={handleChange}
                 rows={4}
                 placeholder="Detalles opcionales..."
-                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition resize-none"
+                className="input-glass resize-none"
               />
             </div>
 
-            {/* Status */}
+            {/* Status – visual selector */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">
+              <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-400 mb-3 uppercase tracking-wider">
+                <Tag size={12} />
                 Estado
               </label>
-              <select
-                name="status"
-                value={form.status}
-                onChange={handleChange}
-                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2.5 text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
-              >
-                {STATUS_OPTIONS.map((opt) => (
-                  <option
-                    key={opt.value}
-                    value={opt.value}
-                    className="bg-slate-700"
-                  >
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
+              <div className="grid grid-cols-3 gap-2">
+                {STATUS_OPTIONS.map((opt) => {
+                  const conf = STATUS_ICONS[opt.value];
+                  const Ic = conf?.icon ?? Circle;
+                  const active = form.status === opt.value;
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() =>
+                        setForm((prev) => ({ ...prev, status: opt.value }))
+                      }
+                      className="flex flex-col items-center gap-2 py-3 px-2 rounded-xl text-xs font-medium transition-all duration-200"
+                      style={{
+                        background: active
+                          ? conf?.bg
+                          : "rgba(255,255,255,0.03)",
+                        border: `1px solid ${active ? conf?.border : "rgba(255,255,255,0.06)"}`,
+                        color: active ? conf?.color : "#64748b",
+                        boxShadow: active
+                          ? `0 0 12px ${conf?.color}20`
+                          : undefined,
+                      }}
+                    >
+                      <Ic
+                        size={16}
+                        style={{ color: active ? conf?.color : "#475569" }}
+                      />
+                      {opt.label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Actions */}
@@ -141,15 +223,16 @@ export default function TaskFormPage() {
               <button
                 type="button"
                 onClick={() => navigate("/tasks")}
-                className="flex-1 bg-slate-700 hover:bg-slate-600 text-slate-300 font-medium py-2.5 rounded-lg transition-colors"
+                className="btn-ghost flex-1 flex items-center justify-center gap-2"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-2.5 rounded-lg transition-colors"
+                className="btn-gold flex-1 flex items-center justify-center gap-2"
               >
+                <Save size={15} />
                 {loading
                   ? "Guardando..."
                   : isEdit
@@ -159,7 +242,7 @@ export default function TaskFormPage() {
             </div>
           </form>
         </div>
-      </div>
+      </motion.div>
     </MainLayout>
   );
 }

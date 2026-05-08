@@ -1,10 +1,19 @@
 export default function LoadingSpinner({ size = "md" }) {
-  const sizes = { sm: "h-5 w-5", md: "h-10 w-10", lg: "h-16 w-16" };
+  const dim = size === "sm" ? 20 : size === "lg" ? 40 : 28;
+  const border = size === "sm" ? 2 : 3;
   return (
-    <div className="flex justify-center items-center p-8">
+    <div className="flex items-center justify-center py-12">
       <div
-        className={`${sizes[size]} animate-spin rounded-full border-4 border-slate-700 border-t-indigo-500`}
+        style={{
+          width: dim,
+          height: dim,
+          border: `${border}px solid rgba(245,158,11,0.15)`,
+          borderTopColor: "#F59E0B",
+          borderRadius: "50%",
+          animation: "spin 0.7s linear infinite",
+        }}
       />
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }
