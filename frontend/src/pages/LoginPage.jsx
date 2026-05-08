@@ -107,7 +107,7 @@ export default function LoginPage() {
 
         {/* Bottom quote */}
         <p className="text-slate-600 text-xs relative z-10">
-          © 2024 TaskFlow · Diseñado para equipos modernos
+          © 2026 TaskFlow · Diseñado para equipos modernos
         </p>
       </div>
 
